@@ -52,7 +52,7 @@ app.get('/mine', function (req, res) {
     const lastBlock = bitcoin.getLastBlock();
     const previousBlockHash = lastBlock["hash"];
     const currentBlockData = {
-        transaction: bitcoin.pendingTransactions,
+        transactions: bitcoin.pendingTransactions,
         index: lastBlock["index"] + 1
     };
     const nonce = bitcoin.proofOfWork(previousBlockHash, currentBlockData);
@@ -167,6 +167,47 @@ app.post('/register-nodes-bulk', function(req, res) {
     });
 
     res.json({note: "Bulk registration successful"});
+});
+
+app.get('/consensus',function (req, res) {
+    const requestPromises = [];
+    bitcoin.networkNodes.forEach(networkNodeUrl => {
+       const requestOptions = {
+           uri: networkNodeUrl + '/blockchain',
+           method: 'GET',
+           json: true
+       };
+
+       requestPromises.push(rp(requestOptions));
+    });
+    Promise.all(requestPromises)
+    .then(blockchains => {
+        const  currentChainLength = bitcoin.chain.length;
+        let newLongestChain = null;
+        let maxChainLength = currentChainLength;
+        let newPendingTransactions = null;
+        blockchains.forEach(blockchain => {
+            if (blockchain.chain.length > maxChainLength) {
+                newLongestChain = blockchain.chain;
+                maxChainLength = blockchain.chain.length;
+                newPendingTransactions = blockchain.pendingTransactions;
+            }
+        });
+        // null variables in if statements will be seen as false
+        if (!newLongestChain || (newLongestChain && !bitcoin.chainIsValid(newLongestChain))) {
+            res.json({
+                note: 'The original chain has not been replaced',
+                chain: bitcoin.chain
+            });
+        } else {
+            bitcoin.chain = newLongestChain;
+            bitcoin.pendingTransactions = newPendingTransactions;
+            res.json({
+                note: 'blockchain has been updated',
+                chain: bitcoin.chain
+            });
+        }
+    });
 });
 
 

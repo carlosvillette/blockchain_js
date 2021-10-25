@@ -82,19 +82,23 @@ class Blockchain {
             const currentBlockData = {transactions: currentBlock['transactions'], index: currentBlock['index']};
             const blockHash = this.hashBlock(prevBlock['hash'],currentBlockData,currentBlock['nonce'])
             const hashWrong = blockHash.substring(0,4) !== '0000';
-            if ( (currentBlock['previosBlockHash'] !== prevBlock['hash'])  && hashWrong) {
+            if ( (currentBlock['previousBlockHash'] !== prevBlock['hash'])  || hashWrong) {
                 validChain = false;
+                console.log("chain index", i);
+                console.log('previous block hash: ', prevBlock['hash']);
+                console.log('current block hash: ', currentBlock['hash']);
             }
         }
 
         const genesisBlock = blockchain[0];
-        const rightNonce = genesisBlock['nonce'] === 100;
+        const rightNonce = genesisBlock['nonce'] === 0;
         const rightPreviousBlockHash = genesisBlock['previousBlockHash'] === '0';
         const rightHash = genesisBlock['hash'] === '0';
         const rightTransactions = genesisBlock['transactions'].length === 0;
 
         if (!rightNonce || !rightPreviousBlockHash || !rightHash || !rightTransactions) {
             validChain = false;
+            console.log("genesis block wrong");
         }
 
         return validChain;
