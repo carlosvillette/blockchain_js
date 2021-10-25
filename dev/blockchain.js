@@ -85,7 +85,8 @@ class Blockchain {
             if ( (currentBlock['previousBlockHash'] !== prevBlock['hash'])  || hashWrong) {
                 validChain = false;
                 console.log("chain index", i);
-                console.log("chain substring: ",blockHash.substring(0,4));
+                console.log('previous block hash: ', prevBlock['hash']);
+                console.log('current block hash: ', currentBlock['hash']);
             }
         }
 
